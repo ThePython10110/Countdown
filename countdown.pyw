@@ -373,7 +373,7 @@ class DatePicker():
         self.root.destroy()
 
 argparser = argparse.ArgumentParser(prog = "Countdown", description = "Shows the remaining time until user-specified events",
-                                    epilog = "Use `hass` for --infile or --outfile to save to/load from Home Assistant." add_help = True)
+                                    epilog = "Use `hass` for --infile or --outfile to save to/load from Home Assistant.", add_help = True)
 argparser.add_argument("-i", "--infile", type=str, help="The file to load data from initally (default: data.json), after first load, loads from --outfile.")
 argparser.add_argument("-o", "--outfile", type=str, help="The file to write data to (default: data.json)")
 
