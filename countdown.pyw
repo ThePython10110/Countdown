@@ -7,6 +7,7 @@ from tkinter import *
 from tkinter import colorchooser, messagebox, simpledialog
 try:
     from hass import *
+    hass_available = True
 except ModuleNotFoundError:
     hass_available = False
 try:
@@ -42,6 +43,8 @@ class Countdown:
         self.load_theme_button.grid(row = 0, column = 3)
         self.remove_theme_button = Button(self.root, text = "Remove theme", command = self.remove_theme, relief = 'flat', cursor = 'hand2')
         self.remove_theme_button.grid(row = 0, column = 4)
+        self.load_data_button = Button(self.root, text = "Load data", command = self.load_data, relief = 'flat', cursor = 'hand2')
+        self.load_data_button.grid(row = 0, column = 5)
         self.canvas = Canvas(self.root, bd = 0, width = self.root.winfo_screenwidth(), height = self.root.winfo_screenheight() - 50, highlightthickness=0)
         self.canvas.grid(row = 2, columnspan = 20)
         self.label = Label(self.root, width = 10, height = 1, anchor = 'w', text = 'Countdown')
@@ -54,7 +57,6 @@ class Countdown:
         if self.infile == "hass":
             try:
                 data = get_state("sensor.countdown_data")["attributes"]["countdown_data"]["countdown_data"]
-                print(data)
             except Exception as e:
                 print(e)
                 data = {'events':{},'themes':{}, 'current_theme': 'Default'}
@@ -72,7 +74,6 @@ class Countdown:
         try:
             assert data["events"] != None
         except (KeyError, AssertionError):
-            self.events = {}
             data["events"] = {}
         try:
             self.themes = data["themes"]
@@ -105,6 +106,11 @@ class Countdown:
         self.sort_events()
         self.infile = self.outfile
         self.save_data()
+        try:
+            self.load_theme(self.current_theme)
+        except AttributeError:
+            pass
+        print("Data loaded.")
 
     def sort_events(self):
         self.events = dict(sorted(self.events.items(), key=lambda x:x[1]))
@@ -193,7 +199,7 @@ class Countdown:
         for key, value in self.events.items():
             data["events"][key] = datetime.isoformat(value)
         if self.outfile == "hass":
-            print(data)
+            print("Data saved")
             call_service("script.countdown_data", data = {"countdown_data": data})
         else:
             with open(self.outfile, "w+") as data_file:
@@ -243,7 +249,7 @@ class Countdown:
         self.font = (font_family, font_size, font_weight + ' ' + font_slant + font_underline + font_overstrike)
         self.soon_color = theme['soon']
         self.today_color = theme['today']
-        for b in [self.add_event_button, self.remove_event_button, self.add_theme_button, self.load_theme_button, self.remove_theme_button]:
+        for b in [self.add_event_button, self.remove_event_button, self.add_theme_button, self.load_theme_button, self.remove_theme_button, self.load_data_button]:
             b.configure(bg = self.background_color, font = self.font, fg = self.heading_color)
         self.canvas.itemconfig("event", fill = self.heading_color, font = self.font)
         self.canvas.configure(bg = self.background_color)
