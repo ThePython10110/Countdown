@@ -5,7 +5,10 @@ from datetime import datetime
 from json import dump, load
 from tkinter import *
 from tkinter import colorchooser, messagebox, simpledialog
-from hass import *
+try:
+    from hass import *
+except ModuleNotFoundError:
+    hass_available = False
 try:
     import tkfontchooser
 except:
@@ -19,7 +22,7 @@ except:
 
 class Countdown:
     """Countdown clock"""
-    def __init__(self, infile = 'hass', outfile = 'hass'):
+    def __init__(self, infile = 'data.json', outfile = 'data.json'):
         self.root = Tk()
         self.root.title("Countdown")
         self.root.withdraw()
@@ -369,20 +372,22 @@ class DatePicker():
             self.data = None
         self.root.destroy()
 
-argparser = argparse.ArgumentParser(prog = "Countdown", description = "Shows the remaining time until user-specified events", add_help = True)
-argparser.add_argument("-i", "--infile", type=str, help="The file to load data from initally (default: hass), after first load, loads from --outfile.")
-argparser.add_argument("-o", "--outfile", type=str, help="The file to write data to (default: hass)")
+argparser = argparse.ArgumentParser(prog = "Countdown", description = "Shows the remaining time until user-specified events",
+                                    epilog = "Use `hass` for --infile or --outfile to save to/load from Home Assistant." add_help = True)
+argparser.add_argument("-i", "--infile", type=str, help="The file to load data from initally (default: data.json), after first load, loads from --outfile.")
+argparser.add_argument("-o", "--outfile", type=str, help="The file to write data to (default: data.json)")
 
 args = argparser.parse_args()
 if args.infile:
     infile = args.infile
 else:
-    infile = "hass"
+    infile = "data.json"
 if args.outfile:
     outfile = args.outfile
 else:
-    outfile = "hass"
-
+    outfile = "data.json"
+if (infile == "hass" or outfile == "hass") and hass_available == False:
+    messagebox.showerror("Error", "Cannot use Home Assistant without hass.py")
 
 if __name__ == "__main__":
     c = Countdown(infile = infile, outfile = outfile)
