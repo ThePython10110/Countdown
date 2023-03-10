@@ -14,7 +14,7 @@ except ModuleNotFoundError:
 dirname = os.path.dirname(__file__)
 tokenpath = os.path.join(dirname, 'Token.txt')
 
-hass_url = "http://192.168.2.214:8123"
+hass_url = "http://homeassistant:8123"
 
 with open(tokenpath, 'r') as tokenfile:
     headers = {
