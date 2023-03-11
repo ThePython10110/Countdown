@@ -24,33 +24,46 @@ except:
 class Countdown:
     """Countdown clock"""
     def __init__(self, infile = 'data.json', outfile = 'data.json'):
+        self.infile = infile
+        self.outfile = outfile #The JSON file to get data from
         self.root = Tk()
         self.root.title("Countdown")
         self.root.withdraw()
         self.root.iconbitmap(default="Clock.ico")
-        self.infile = infile
-        self.outfile = outfile #The JSON file to get data from
-        self.load_data()
-        #self.root.configure(bg = self.background_color)
         self.root.state('zoomed')
-        self.add_event_button = Button(self.root, text = "New event", command = self.add_event, relief = 'flat', cursor = 'hand2')
+
+        self.button_frame = Frame(self.root)
+        self.button_frame.pack(side = TOP, fill = X, expand = True)
+        self.add_event_button = Button(self.button_frame, text = "New event", command = self.add_event, relief = 'flat', cursor = 'hand2')
         self.add_event_button.grid(row = 0)
-        self.remove_event_button = Button(self.root, text = "Remove event", command = self.remove_event, relief = 'flat', cursor = 'hand2')
+        self.remove_event_button = Button(self.button_frame, text = "Remove event", command = self.remove_event, relief = 'flat', cursor = 'hand2')
         self.remove_event_button.grid(row = 0, column = 1)
-        self.add_theme_button = Button(self.root, text = "Add theme", command = self.add_theme, relief = 'flat', cursor = 'hand2')
+        self.add_theme_button = Button(self.button_frame, text = "Add theme", command = self.add_theme, relief = 'flat', cursor = 'hand2')
         self.add_theme_button.grid(row = 0, column = 2)
-        self.load_theme_button = Button(self.root, text = "Load theme", command = self.load_theme, relief = 'flat', cursor = 'hand2')
+        self.load_theme_button = Button(self.button_frame, text = "Load theme", command = self.load_theme, relief = 'flat', cursor = 'hand2')
         self.load_theme_button.grid(row = 0, column = 3)
-        self.remove_theme_button = Button(self.root, text = "Remove theme", command = self.remove_theme, relief = 'flat', cursor = 'hand2')
+        self.remove_theme_button = Button(self.button_frame, text = "Remove theme", command = self.remove_theme, relief = 'flat', cursor = 'hand2')
         self.remove_theme_button.grid(row = 0, column = 4)
-        self.load_data_button = Button(self.root, text = "Load data", command = self.load_data, relief = 'flat', cursor = 'hand2')
+        self.load_data_button = Button(self.button_frame, text = "Load data", command = self.load_data, relief = 'flat', cursor = 'hand2')
         self.load_data_button.grid(row = 0, column = 5)
-        self.canvas = Canvas(self.root, bd = 0, width = self.root.winfo_screenwidth(), height = self.root.winfo_screenheight() - 50, highlightthickness=0)
-        self.canvas.grid(row = 2, columnspan = 20)
-        self.label = Label(self.root, width = 10, height = 1, anchor = 'w', text = 'Countdown')
-        self.label.grid(row = 1)
-        self.load_theme(self.current_theme)
+        
+        self.label = Label(self.root, width = 10, height = 1, text = 'Countdown')
+        self.label.pack(side = TOP, fill = X, expand = TRUE)
+
+        self.canvas = Canvas(self.root, bd = 0, width = self.root.winfo_screenwidth() - 100, height = self.root.winfo_screenheight() - 200,# highlightthickness=0,
+                             scrollregion = (0, 0, 500, 500))
+        self.canvas.pack(side = LEFT, expand = True, fill = BOTH)
+        self.scrollbar = Scrollbar(self.root, orient="vertical", command=self.canvas.yview)
+        self.scrollbar.pack(side = RIGHT, expand = True, fill = Y)
+        self.canvas.configure(yscrollcommand=self.scrollbar.set)
+        self.canvas.bind_all("<MouseWheel>", self._on_mousewheel)
+        
+        self.load_data()
         self.update()
+
+    
+    def _on_mousewheel(self, event):
+        self.canvas.yview_scroll(int(-1*(event.delta/120)), "units")
 
     def load_data(self):
         """Loads data from JSON"""
@@ -154,6 +167,7 @@ class Countdown:
             y += self.vertical_space
         for title in past_events:
             self.remove_event(title)
+        self.canvas.configure(scrollregion=(0, 0, *(self.canvas.bbox("all")[2:])))
             
         self.root.after(1000, self.update)
         
@@ -200,7 +214,8 @@ class Countdown:
             data["events"][key] = datetime.isoformat(value)
         if self.outfile == "hass":
             print("Data saved")
-            call_service("script.countdown_data", data = {"countdown_data": data})
+            #call_service("script.countdown_data", data = {"countdown_data": data})
+            fire_event("countdown_data", {"countdown_data": data})
         else:
             with open(self.outfile, "w+") as data_file:
                 dump(data, data_file, indent=2)
@@ -254,6 +269,7 @@ class Countdown:
         self.canvas.itemconfig("event", fill = self.heading_color, font = self.font)
         self.canvas.configure(bg = self.background_color)
         self.root.configure(bg = self.background_color)
+        self.button_frame.configure(bg = self.background_color)
         self.label.configure(fg = self.heading_color, bg = self.background_color,
                              font = (self.font[0], str(int(self.font[1]) + 10), self.font[2]))
         self.save_data()
