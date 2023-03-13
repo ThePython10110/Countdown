@@ -1,6 +1,7 @@
+#! /usr/bin/python3
 # NOTE: Any theme called default will be the default theme.
 
-import argparse
+import argparse, os
 from datetime import datetime
 from json import dump, load
 from tkinter import *
